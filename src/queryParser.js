@@ -7,7 +7,6 @@ const parseQuery = (query) => {
     throw new Error("Invalid query");
   }
 
-  console.log(matches.length);
   fields = matches
     .slice(1, matches.length - 1)
     .map((field) => field.replace(/,/g, "").trim());
