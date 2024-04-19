@@ -1,17 +1,20 @@
 const parseQuery = (query) => {
-  const re = /SELECT (\w+)(, \w+)* FROM (\w+)/;
+  const re =
+    /^SELECT (?<fields>(\w+)(, ?\w+)*) FROM (?<table>\w+)( WHERE (?<where>(\w|=| )+))?$/;
 
-  const matches = re.exec(query);
+  const matches = query.match(re);
 
   if (!matches) {
     throw new Error("Invalid query");
   }
 
-  fields = matches
-    .slice(1, matches.length - 1)
-    .map((field) => field.replace(/,/g, "").trim());
+  fields = matches.groups.fields.split(",").map((field) => field.trim());
 
-  return { fields, table: matches[matches.length - 1] };
+  return {
+    fields,
+    table: matches.groups.table,
+    whereClause: matches.groups.where ?? null,
+  };
 };
 
 module.exports = parseQuery;
