@@ -8,12 +8,19 @@ const executeSELECTQuery = async (query) => {
   const result = [];
 
   await data.forEach((row) => {
-    if (parsed_query.whereClause) {
-      const [field, value] = parsed_query.whereClause.split(" = ");
-      if (row[field] !== value) {
-        return;
-      }
+    let allWhereClausesMatch = true;
+    if (parsed_query.whereClauses.length) {
+      parsed_query.whereClauses.forEach(({ field, operator, value }) => {
+        //prettier-ignore
+        if (!eval(`"${row[field]}" ${operator === "=" ? "==" : operator} "${value}"`))
+          allWhereClausesMatch = false;
+      });
     }
+
+    if (!allWhereClausesMatch) {
+      return;
+    }
+
     const obj = {};
     parsed_query.fields.forEach((field) => {
       obj[field] = row[field];
