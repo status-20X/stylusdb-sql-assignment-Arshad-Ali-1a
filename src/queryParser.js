@@ -2,7 +2,7 @@ const { parse } = require("json2csv");
 
 const parseQuery = (query) => {
   const re =
-    /^SELECT (?<fields>(\w|\.)+(,\s?(\w|\.)+)*) FROM (?<table>\w+)( INNER JOIN (?<join_table>\w+) ON (?<join_left>(\w|\.)+)\s?=\s?(?<join_right>(\w|\.)+))?( WHERE (?<where>(\w|\.|[=><!]|\s)+))?$/;
+    /^SELECT (?<fields>(\w|\.)+(,\s?(\w|\.)+)*) FROM (?<table>\w+)( (?<join_type>\w+) JOIN (?<join_table>\w+) ON (?<join_left>(\w|\.)+)\s?=\s?(?<join_right>(\w|\.)+))?( WHERE (?<where>(\w|\.|[=><!]|\s)+))?$/;
   const re_where_operator = /([=><!]+)/;
 
   const matches = query.match(re);
@@ -41,7 +41,8 @@ const parseQuery = (query) => {
       ? { left: matches.groups.join_left, right: matches.groups.join_right }
       : null,
     joinTable: matches.groups.join_table ?? null,
+    joinType: matches.groups.join_type ?? null,
   };
 };
 
-module.exports = parseQuery;
+module.exports = { parseQuery };

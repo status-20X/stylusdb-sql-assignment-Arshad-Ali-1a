@@ -1,5 +1,5 @@
 const readCSV = require("./csvReader");
-const parseQuery = require("./queryParser");
+const { parseQuery } = require("./queryParser");
 
 const executeSELECTQuery = async (query) => {
   const parsed_query = parseQuery(query);
@@ -27,13 +27,22 @@ const executeSELECTQuery = async (query) => {
 
     //lll
     data.forEach((row) => {
+      let leftTableRowAddedAtLeastOnce = false;
       joinTableData.forEach((joinRow) => {
         if (
           row[parsed_query.joinCondition.left] ===
           joinRow[parsed_query.joinCondition.right]
-        )
+        ) {
           JoinedData.push({ ...row, ...joinRow });
+          leftTableRowAddedAtLeastOnce = true;
+        }
       });
+      if (!leftTableRowAddedAtLeastOnce && parsed_query.joinType === "LEFT") {
+        const rightObjectWithNullValues = Object.fromEntries(
+          Object.entries(joinTableData[0]).map(([key, value]) => [key, null])
+        );
+        JoinedData.push({ ...row, ...rightObjectWithNullValues });
+      }
     });
 
     data = JoinedData;
