@@ -2,8 +2,44 @@ const readCSV = require("./csvReader");
 const parseQuery = require("./queryParser");
 
 const executeSELECTQuery = async (query) => {
-  const data = await readCSV("./sample.csv");
   const parsed_query = parseQuery(query);
+  let data = await readCSV(`./${parsed_query.table}.csv`);
+
+  if (parsed_query.joinTable) {
+    const JoinedData = [];
+    let joinTableData = await readCSV(`./${parsed_query.joinTable}.csv`);
+
+    data = data.map((row) => {
+      const newRow = {};
+      Object.keys(row).forEach((key) => {
+        newRow[`${parsed_query.table}.${key}`] = row[key];
+      });
+      return newRow;
+    });
+
+    joinTableData = joinTableData.map((row) => {
+      const newRow = {};
+      Object.keys(row).forEach((key) => {
+        newRow[`${parsed_query.joinTable}.${key}`] = row[key];
+      });
+      return newRow;
+    });
+
+    //lll
+    data.forEach((row) => {
+      joinTableData.forEach((joinRow) => {
+        if (
+          row[parsed_query.joinCondition.left] ===
+          joinRow[parsed_query.joinCondition.right]
+        )
+          JoinedData.push({ ...row, ...joinRow });
+      });
+    });
+
+    data = JoinedData;
+  }
+
+  // console.log(data);
 
   const result = [];
 
@@ -28,6 +64,7 @@ const executeSELECTQuery = async (query) => {
     result.push(obj);
   });
 
+  // console.log(result);
   return result;
 };
 
