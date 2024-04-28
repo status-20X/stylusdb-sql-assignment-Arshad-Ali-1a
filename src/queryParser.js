@@ -76,7 +76,9 @@ const parseQuery = (query) => {
   const matches = query.match(re);
 
   if (!matches) {
-    throw new Error("Invalid query");
+    throw new Error(
+      "Error executing query: Query parsing error: Invalid SELECT format"
+    );
   }
   // console.log(matches);
 
