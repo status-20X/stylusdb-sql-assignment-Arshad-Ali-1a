@@ -321,11 +321,7 @@ const executeSELECTQuery = async (query) => {
     });
   }
 
-  if (parsed_query.limit != null) {
-    data = data.slice(0, parsed_query.limit);
-  }
-
-  const result = [];
+  let result = [];
 
   data.forEach((row) => {
     const obj = {};
@@ -335,6 +331,20 @@ const executeSELECTQuery = async (query) => {
     result.push(obj);
   });
 
+  if (parsed_query.isDistinct) {
+    result = result.filter(
+      (row, index, self) =>
+        index ===
+        self.findIndex(
+          (t) => JSON.stringify(t) === JSON.stringify(row) //!this is a hack, need to find a better way
+        )
+    );
+  }
+
+  if (parsed_query.limit != null) {
+    result = result.slice(0, parsed_query.limit);
+  }
+
   // console.log(result);
   return result;
 };
@@ -343,6 +353,8 @@ module.exports = executeSELECTQuery;
 
 // (async () => {
 //   console.log(
-//     await executeSELECTQuery("SELECT AVG(age) FROM student WHERE age > 22")
+//     await executeSELECTQuery(
+//       "SELECT DISTINCT student.name FROM student INNER JOIN enrollment ON student.id = enrollment.student_id"
+//     )
 //   );
 // })();

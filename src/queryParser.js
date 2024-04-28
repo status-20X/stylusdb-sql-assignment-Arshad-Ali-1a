@@ -68,7 +68,7 @@ const parseOrderBy = (query) => {
 
 const parseQuery = (query) => {
   const re =
-    /SELECT (?<fields>(\w|\.|\(|\)|\*|\s)+(,\s?(\w|\.|\(|\)|\*|\s)+)*) FROM (?<table>\w+)( (?<join_type>\w+) JOIN (?<join_table>\w+) ON (?<join_left>(\w|\.)+)\s?=\s?(?<join_right>(\w|\.)+))?( WHERE (?<where>(\w|\.|[=><!]|\s|'|")+?)(?=\s*(GROUP BY|ORDER BY|LIMIT|UNION|\s*$)))?/;
+    /SELECT (?<distinct>\s*DISTINCT\s*)?(?<fields>(\w|\.|\(|\)|\*|\s)+(,\s?(\w|\.|\(|\)|\*|\s)+)*) FROM (?<table>\w+)( (?<join_type>\w+) JOIN (?<join_table>\w+) ON (?<join_left>(\w|\.)+)\s?=\s?(?<join_right>(\w|\.)+))?( WHERE (?<where>(\w|\.|[=><!]|\s|'|")+?)(?=\s*(GROUP BY|ORDER BY|LIMIT|UNION|\s*$)))?/;
 
   //! removed full match from regex
   const re_where_operator = /([=><!]+)/;
@@ -121,6 +121,7 @@ const parseQuery = (query) => {
       !(groupByFieldsObject.groupByFields !== null),
     orderByFields: parseOrderBy(query), //! assuming only one order by field for now
     limit: parseLimit(query),
+    isDistinct: matches.groups.distinct !== undefined,
   };
 };
 
@@ -128,6 +129,6 @@ module.exports = { parseQuery, parseJoinClause };
 
 // console.log(
 //   parseQuery(
-//     `SELECT COUNT(id) as count, age FROM student GROUP BY age ORDER BY age DESC`
+//     `SELECT DISTINCT student.name FROM student INNER JOIN enrollment ON student.id = enrollment.student_id`
 //   )
 // );
