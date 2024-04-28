@@ -39,6 +39,18 @@ const hasAggregateFunction = (fieldsString) => {
   return fieldsString.match(re) !== null;
 };
 
+const parseLimit = (query) => {
+  const re = /LIMIT (?<limit>\d+)/;
+
+  const matches = query.match(re);
+
+  if (!matches) {
+    return null;
+  }
+
+  return parseInt(matches.groups.limit.trim());
+};
+
 const parseOrderBy = (query) => {
   const re = /ORDER BY (?<orderby_field>(\w|\.)+) (?<orderby_order>(ASC|DESC))/;
 
@@ -106,6 +118,7 @@ const parseQuery = (query) => {
       hasAggregateFunction(matches.groups.fields) &&
       !(groupByFieldsObject.groupByFields !== null),
     orderByFields: parseOrderBy(query), //! assuming only one order by field for now
+    limit: parseLimit(query),
   };
 };
 

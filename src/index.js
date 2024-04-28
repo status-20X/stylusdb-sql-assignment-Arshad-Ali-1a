@@ -321,6 +321,10 @@ const executeSELECTQuery = async (query) => {
     });
   }
 
+  if (parsed_query.limit != null) {
+    data = data.slice(0, parsed_query.limit);
+  }
+
   const result = [];
 
   data.forEach((row) => {
