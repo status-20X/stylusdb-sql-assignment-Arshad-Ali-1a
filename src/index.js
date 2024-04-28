@@ -306,6 +306,21 @@ const executeSELECTQuery = async (query) => {
   else if (parsed_query.hasAggregateWithoutGroupBy)
     data = applyAggrateWithoutGroupBy(data, parsed_query);
 
+  if (parsed_query.orderByFields) {
+    data.sort((a, b) => {
+      if (parsed_query.orderByFields.order == "ASC")
+        return a[parsed_query.orderByFields.field] >
+          b[parsed_query.orderByFields.field]
+          ? 1
+          : -1;
+      else
+        return a[parsed_query.orderByFields.field] >
+          b[parsed_query.orderByFields.field]
+          ? -1
+          : 1;
+    });
+  }
+
   const result = [];
 
   data.forEach((row) => {

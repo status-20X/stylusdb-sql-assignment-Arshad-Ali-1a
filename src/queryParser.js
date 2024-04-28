@@ -39,9 +39,24 @@ const hasAggregateFunction = (fieldsString) => {
   return fieldsString.match(re) !== null;
 };
 
+const parseOrderBy = (query) => {
+  const re = /ORDER BY (?<orderby_field>(\w|\.)+) (?<orderby_order>(ASC|DESC))/;
+
+  const matches = query.match(re);
+
+  if (!matches) {
+    return null;
+  }
+
+  return {
+    field: matches.groups.orderby_field.trim(),
+    order: matches.groups.orderby_order.trim(),
+  };
+};
+
 const parseQuery = (query) => {
   const re =
-    /SELECT (?<fields>(\w|\.|\(|\)|\*)+(,\s?(\w|\.|\(|\)|\*)+)*) FROM (?<table>\w+)( (?<join_type>\w+) JOIN (?<join_table>\w+) ON (?<join_left>(\w|\.)+)\s?=\s?(?<join_right>(\w|\.)+))?( WHERE (?<where>(\w|\.|[=><!]|\s|'|")+?)(?=\s*GROUP BY|\s*$))?/;
+    /SELECT (?<fields>(\w|\.|\(|\)|\*|\s)+(,\s?(\w|\.|\(|\)|\*|\s)+)*) FROM (?<table>\w+)( (?<join_type>\w+) JOIN (?<join_table>\w+) ON (?<join_left>(\w|\.)+)\s?=\s?(?<join_right>(\w|\.)+))?( WHERE (?<where>(\w|\.|[=><!]|\s|'|")+?)(?=\s*(GROUP BY|ORDER BY|LIMIT|UNION|\s*$)))?/;
 
   //! removed full match from regex
   const re_where_operator = /([=><!]+)/;
@@ -90,11 +105,14 @@ const parseQuery = (query) => {
     hasAggregateWithoutGroupBy:
       hasAggregateFunction(matches.groups.fields) &&
       !(groupByFieldsObject.groupByFields !== null),
+    orderByFields: parseOrderBy(query), //! assuming only one order by field for now
   };
 };
 
 module.exports = { parseQuery, parseJoinClause };
 
 // console.log(
-//   parseQuery(`SELECT age, COUNT(*) FROM student WHERE age > 22 GROUP BY age`)
+//   parseQuery(
+//     `SELECT COUNT(id) as count, age FROM student GROUP BY age ORDER BY age DESC`
+//   )
 // );
