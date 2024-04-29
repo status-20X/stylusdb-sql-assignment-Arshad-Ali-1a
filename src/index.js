@@ -1,5 +1,5 @@
-const readCSV = require("./csvReader");
-const { parseQuery } = require("./queryParser");
+const { readCSV, writeCSV } = require("./csvReader");
+const { parseQuery, parseINSERTQuery } = require("./queryParser");
 
 const leftJoin = (data, joinTableData, parsed_query) => {
   const JoinedData = [];
@@ -356,12 +356,33 @@ const executeSELECTQuery = async (query) => {
   return result;
 };
 
-module.exports = executeSELECTQuery;
+//insert
+const executeINSERTQuery = async (query) => {
+  const parsed_insert_query = parseINSERTQuery(query);
+  let data = await readCSV(`./${parsed_insert_query.table}.csv`);
+
+  const obj = {};
+
+  for (let i = 0; i < parsed_insert_query.columns.length; i++)
+    [(obj[parsed_insert_query.columns[i]] = parsed_insert_query.values[i])];
+
+  data.push(obj);
+
+  await writeCSV(`./${parsed_insert_query.table}.csv`, data);
+};
+
+module.exports = { executeSELECTQuery, executeINSERTQuery };
 
 // (async () => {
 //   console.log(
 //     await executeSELECTQuery(
 //       "SELECT DISTINCT name FROM student WHERE name LIKE '%e%'"
 //     )
+//   );
+// })();
+
+// (async () => {
+//   await executeINSERTQuery(
+//     "INSERT INTO enrollment (student_id, course) VALUES (10, 'lol')"
 //   );
 // })();

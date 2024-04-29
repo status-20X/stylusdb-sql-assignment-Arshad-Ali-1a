@@ -87,7 +87,7 @@ const parseQuery = (query) => {
 
   //extracting where clause
   whereClauses = [];
-  console.log(matches.groups.where);
+  // console.log(matches.groups.where);
 
   if (matches.groups.where) {
     matches.groups.where.split(/ ?AND ?/).forEach((clause) => {
@@ -126,6 +126,38 @@ const parseQuery = (query) => {
   };
 };
 
-module.exports = { parseQuery, parseJoinClause };
+const parseINSERTQuery = (query) => {
+  const re_insert =
+    /INSERT INTO (?<table>\w+) \((?<fields>[a-zA-Z_,0-9 ]+)\) VALUES \((?<values>[a-zA-Z_,'"0-9 ]+)\)/;
+  const matches = query.match(re_insert);
+
+  if (!matches) {
+    throw new Error(
+      "Error executing query: Query parsing error: Invalid INSERT format"
+    );
+  }
+
+  return {
+    type: "INSERT",
+    table: matches.groups.table,
+    columns: matches.groups.fields.split(/,/g).map((field) => field.trim()),
+    values: matches.groups.values
+      .split(/,/g)
+      .map((value) => value.replace(/'|"/g, "").trim()),
+  };
+};
+
+const parseSelectQuery = parseQuery;
+module.exports = {
+  parseQuery,
+  parseJoinClause,
+  parseINSERTQuery,
+  parseSelectQuery,
+};
 
 // console.log(parseQuery(`SELECT name FROM student WHERE name <8`));
+// console.log(
+//   parseINSERTQuery(
+//     `INSERT INTO grades (student_id, course, grade) VALUES ('4', 'Physics', 'A')`
+//   )
+// );
