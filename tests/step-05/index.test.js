@@ -1,30 +1,30 @@
-const readCSV = require("../../src/csvReader");
-//const parseQuery = require("../../src/queryParser");
-const { parseQuery } = require("../../src/queryParser");
-const executeSELECTQuery = require("../../src/index");
+const { readCSV } = require("../../src/csvReader");
+const { parseSelectQuery } = require("../../src/queryParser");
+const { executeSELECTQuery } = require("../../src/queryExecutor");
 
 test("Read CSV File", async () => {
   const data = await readCSV("./student.csv");
   expect(data.length).toBeGreaterThan(0);
   expect(data.length).toBe(4);
   expect(data[0].name).toBe("John");
-  expect(data[0].age).toBe("30"); //ignore the string type here, we will fix this later
-});
+  expect(data[0].age).toBe("30");
+}, 5000);
 
 test("Parse SQL Query", () => {
   const query = "SELECT id, name FROM student";
-  const parsed = parseQuery(query);
+  const parsed = parseSelectQuery(query);
   expect(parsed).toEqual({
     fields: ["id", "name"],
-    table: "student",
-    whereClauses: [],
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
+    isDistinct: false,
     joinCondition: null,
     joinTable: null,
     joinType: null,
-    groupByFields: null,
-    hasAggregateWithoutGroupBy: false,
-    orderByFields: null,
     limit: null,
+    orderByFields: null,
+    table: "student",
+    whereClauses: [],
   });
 });
 
@@ -36,14 +36,14 @@ test("Execute SQL Query", async () => {
   expect(result[0]).toHaveProperty("name");
   expect(result[0]).not.toHaveProperty("age");
   expect(result[0]).toEqual({ id: "1", name: "John" });
-});
+}, 30000);
 
 test("Parse SQL Query with WHERE Clause", () => {
-  const query = "SELECT id, name FROM student WHERE age = 25";
-  const parsed = parseQuery(query);
+  const query = "SELECT id, name FROM sample WHERE age = 25";
+  const parsed = parseSelectQuery(query);
   expect(parsed).toEqual({
     fields: ["id", "name"],
-    table: "student",
+    table: "sample",
     whereClauses: [
       {
         field: "age",
@@ -51,13 +51,14 @@ test("Parse SQL Query with WHERE Clause", () => {
         value: "25",
       },
     ],
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
+    isDistinct: false,
     joinCondition: null,
     joinTable: null,
     joinType: null,
-    groupByFields: null,
-    hasAggregateWithoutGroupBy: false,
-    orderByFields: null,
     limit: null,
+    orderByFields: null,
   });
 });
 
