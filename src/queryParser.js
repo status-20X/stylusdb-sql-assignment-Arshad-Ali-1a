@@ -125,6 +125,7 @@ const parseQuery = (query) => {
     isDistinct: matches.groups.distinct !== undefined,
   };
 };
+const parseSelectQuery = parseQuery;
 
 const parseINSERTQuery = (query) => {
   const re_insert =
@@ -147,17 +148,48 @@ const parseINSERTQuery = (query) => {
   };
 };
 
-const parseSelectQuery = parseQuery;
+const parseDELETEQuery = (query) => {
+  const re_delete =
+    /DELETE FROM (?<table>\w+)( WHERE (?<where>(\w|\.|[=><!]|\s|'|"|%)+))?/;
+
+  const matches = query.match(re_delete);
+
+  if (!matches) {
+    throw new Error(
+      "Error executing query: Query parsing error: Invalid DELETE format"
+    );
+  }
+
+  whereClauses = [];
+  if (matches.groups.where) {
+    const re_where_operator = /(LIKE|<=|>=|==|!=|<|>|=)/;
+
+    matches.groups.where.split(/ ?AND ?/).forEach((clause) => {
+      const [field, operator, value] = clause.trim().split(re_where_operator);
+      whereClauses.push({
+        field: field.trim(),
+        operator: operator.trim(),
+        value: value.replaceAll(/'|"/g, "").trim(),
+      });
+    });
+  }
+
+  return {
+    type: "DELETE",
+    table: matches.groups.table,
+    whereClauses: whereClauses,
+  };
+};
+
 module.exports = {
   parseQuery,
   parseJoinClause,
   parseINSERTQuery,
   parseSelectQuery,
+  parseDELETEQuery,
 };
 
 // console.log(parseQuery(`SELECT name FROM student WHERE name <8`));
 // console.log(
-//   parseINSERTQuery(
-//     `INSERT INTO grades (student_id, course, grade) VALUES ('4', 'Physics', 'A')`
-//   )
+//   parseDELETEQuery(`DELETE FROM courses WHERE course_id LIKE '%abc'`)
 // );

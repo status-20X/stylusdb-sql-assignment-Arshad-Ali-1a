@@ -1,5 +1,9 @@
 const { readCSV, writeCSV } = require("./csvReader");
-const { parseQuery, parseINSERTQuery } = require("./queryParser");
+const {
+  parseQuery,
+  parseINSERTQuery,
+  parseDELETEQuery,
+} = require("./queryParser");
 
 const leftJoin = (data, joinTableData, parsed_query) => {
   const JoinedData = [];
@@ -371,7 +375,36 @@ const executeINSERTQuery = async (query) => {
   await writeCSV(`./${parsed_insert_query.table}.csv`, data);
 };
 
-module.exports = { executeSELECTQuery, executeINSERTQuery };
+const executeDELETEQuery = async (query) => {
+  const parsed_delete_query = parseDELETEQuery(query);
+
+  let data = await readCSV(`./${parsed_delete_query.table}.csv`);
+
+  const filtered_data = [];
+  data.forEach((row) => {
+    let allWhereClausesMatch = true; //!this is for AND, make for OR also
+    parsed_delete_query.whereClauses.forEach(({ field, operator, value }) => {
+      if (operator == "LIKE") {
+        const re_like = new RegExp(`^${value.replace(/%/g, ".*")}$`, "ig");
+        if (!row[field].match(re_like)) {
+          allWhereClausesMatch = false;
+        }
+      } else {
+        if (!eval(`row[field] ${operator === "=" ? "==" : operator} value`)) {
+          allWhereClausesMatch = false;
+        }
+      }
+    });
+
+    if (!allWhereClausesMatch) {
+      filtered_data.push(row);
+    }
+  });
+
+  await writeCSV(`./${parsed_delete_query.table}.csv`, filtered_data);
+};
+
+module.exports = { executeSELECTQuery, executeINSERTQuery, executeDELETEQuery };
 
 // (async () => {
 //   console.log(
@@ -382,7 +415,5 @@ module.exports = { executeSELECTQuery, executeINSERTQuery };
 // })();
 
 // (async () => {
-//   await executeINSERTQuery(
-//     "INSERT INTO enrollment (student_id, course) VALUES (10, 'lol')"
-//   );
+//   await executeDELETEQuery("DELETE FROM sample WHERE name LIKE 'z%'");
 // })();
