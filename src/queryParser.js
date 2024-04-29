@@ -68,10 +68,10 @@ const parseOrderBy = (query) => {
 
 const parseQuery = (query) => {
   const re =
-    /SELECT (?<distinct>\s*DISTINCT\s*)?(?<fields>(\w|\.|\(|\)|\*|\s)+(,\s?(\w|\.|\(|\)|\*|\s)+)*) FROM (?<table>\w+)( (?<join_type>\w+) JOIN (?<join_table>\w+) ON (?<join_left>(\w|\.)+)\s?=\s?(?<join_right>(\w|\.)+))?( WHERE (?<where>(\w|\.|[=><!]|\s|'|")+?)(?=\s*(GROUP BY|ORDER BY|LIMIT|UNION|\s*$)))?/;
+    /SELECT (?<distinct>\s*DISTINCT\s*)?(?<fields>(\w|\.|\(|\)|\*|\s)+(,\s?(\w|\.|\(|\)|\*|\s)+)*) FROM (?<table>\w+)( (?<join_type>\w+) JOIN (?<join_table>\w+) ON (?<join_left>(\w|\.)+)\s?=\s?(?<join_right>(\w|\.)+))?( WHERE (?<where>(\w|\.|[=><!]|\s|'|"|%)+?)(?=\s*(GROUP BY|ORDER BY|LIMIT|UNION|\s*$)))?/;
 
   //! removed full match from regex
-  const re_where_operator = /([=><!]+)/;
+  const re_where_operator = /(LIKE|<=|>=|==|!=|<|>|=)/;
 
   const matches = query.match(re);
 
@@ -87,6 +87,7 @@ const parseQuery = (query) => {
 
   //extracting where clause
   whereClauses = [];
+  console.log(matches.groups.where);
 
   if (matches.groups.where) {
     matches.groups.where.split(/ ?AND ?/).forEach((clause) => {
@@ -127,8 +128,4 @@ const parseQuery = (query) => {
 
 module.exports = { parseQuery, parseJoinClause };
 
-// console.log(
-//   parseQuery(
-//     `SELECT DISTINCT student.name FROM student INNER JOIN enrollment ON student.id = enrollment.student_id`
-//   )
-// );
+// console.log(parseQuery(`SELECT name FROM student WHERE name <8`));

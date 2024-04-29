@@ -74,15 +74,22 @@ const handleWhereClauses = (data, parsed_query) => {
     let allWhereClausesMatch = true; //!this is for AND, make for OR also
     if (parsed_query.whereClauses.length) {
       parsed_query.whereClauses.forEach(({ field, operator, value }) => {
-        //prettier-ignore
-        if (!eval(`"${row[field]}" ${operator === "=" ? "==" : operator} "${value}"`)){ //!added "row[field]==null" for ignoring where when field is null, which happensS in case of joins
-
+        if (operator === "LIKE") {
+          const re_like = new RegExp(`^${value.replace(/%/g, ".*")}$`, "ig");
+          if (!row[field].match(re_like)) {
+            allWhereClausesMatch = false;
+          }
+        } else {
+          //prettier-ignore
+          if (!eval(`"${row[field]}" ${operator === "=" ? "==" : operator} "${value}"`)){ //!added "row[field]==null" for ignoring where when field is null, which happensS in case of joins
+            
           if(parsed_query.joinTable && field.split(".")[0]==parsed_query.table && row[field]==null){
             //if tables are joined AND field is from the main table AND field is null() because it was from the join.. then allow it in the result
             //do nothing
           }
           else
             allWhereClausesMatch = false;
+          }
         }
       });
     }
@@ -354,7 +361,7 @@ module.exports = executeSELECTQuery;
 // (async () => {
 //   console.log(
 //     await executeSELECTQuery(
-//       "SELECT DISTINCT student.name FROM student INNER JOIN enrollment ON student.id = enrollment.student_id"
+//       "SELECT DISTINCT name FROM student WHERE name LIKE '%e%'"
 //     )
 //   );
 // })();
