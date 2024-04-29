@@ -3,7 +3,7 @@ const {
   executeSELECTQuery,
   executeINSERTQuery,
   executeDELETEQuery,
-} = require("./index");
+} = require("./queryExecutor");
 
 const rl = readline.createInterface({
   input: process.stdin,
